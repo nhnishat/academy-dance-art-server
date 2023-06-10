@@ -47,6 +47,11 @@ async function run() {
 		await client.connect();
 		// Send a ping to confirm a successful connection
 		const usersCollection = client.db('academyDance').collection('users');
+		const instructorsCollection = client
+			.db('academyDance')
+			.collection('instructors');
+		const classesCollection = client.db('academyDance').collection('classes');
+
 		// JWT related api
 		app.post('/jwt', (req, res) => {
 			const user = req.body;
@@ -54,6 +59,15 @@ async function run() {
 				expiresIn: '1hr',
 			});
 			res.send({ token });
+		});
+
+		app.get('/instructors', async (req, res) => {
+			const result = await instructorsCollection.find().toArray();
+			res.send(result);
+		});
+		app.get('/classes', async (req, res) => {
+			const result = await classesCollection.find().toArray();
+			res.send(result);
 		});
 
 		// admin related api
