@@ -28,7 +28,7 @@ const verifyJWT = (req, res, next) => {
 
 // console.log(process.env.ACCESS_TOKEN);
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const req = require('express/lib/request');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.t4pio7r.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -116,6 +116,7 @@ async function run() {
 			const result = await usersCollection.insertOne(users);
 			res.send(result);
 		});
+		// user admin related api
 
 		app.get('/users/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
 			const email = req.params.email;
@@ -127,6 +128,20 @@ async function run() {
 			const result = { admin: user?.role === 'admin' };
 			res.send(result);
 		});
+
+		app.patch('/users/admin/:id', async (req, res) => {
+			const id = req.params.id;
+			const query = { _id: new ObjectId(id) };
+			const updatedRole = {
+				$set: {
+					role: 'admin',
+				},
+			};
+			const result = await usersCollection.updateOne(query, updatedRole);
+			res.send(result);
+		});
+
+		// user instructor related api
 		app.get('/users/instructor/:email', verifyJWT, async (req, res) => {
 			const email = req.params.email;
 			if (req.decoded.email !== email) {
@@ -135,6 +150,18 @@ async function run() {
 			const query = { email: email };
 			const user = await usersCollection.findOne(query);
 			const result = { instructor: user?.role === 'instructor' };
+			res.send(result);
+		});
+
+		app.patch('/users/instructor/:id', async (req, res) => {
+			const id = req.params.id;
+			const query = { _id: new ObjectId(id) };
+			const updatedRole = {
+				$set: {
+					role: 'instructor',
+				},
+			};
+			const result = await usersCollection.updateOne(query, updatedRole);
 			res.send(result);
 		});
 
