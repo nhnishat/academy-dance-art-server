@@ -77,6 +77,14 @@ async function run() {
 			const result = await classesCollection.find().toArray();
 			res.send(result);
 		});
+		app.post('/classes/:id', async (req, res) => {
+			const body = req.body;
+			const id = req.params.id;
+			const result = await classesCollection.insertOne(body);
+			const query = { _id: new ObjectId(id) };
+			const resultD = await requestCollection.deleteOne(query);
+			res.send(result, resultD);
+		});
 
 		// admin request
 
@@ -87,6 +95,12 @@ async function run() {
 		app.post('/requestadmin', async (req, res) => {
 			const body = req.body;
 			const result = await requestCollection.insertOne(body);
+			res.send(result);
+		});
+		app.delete('/requestadmin/:id', async (req, res) => {
+			const id = req.params.id;
+			const query = { _id: new ObjectId(id) };
+			const result = await requestCollection.deleteOne(query);
 			res.send(result);
 		});
 
