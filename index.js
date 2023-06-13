@@ -56,6 +56,9 @@ async function run() {
 		const classesCollection = client.db('academyDance').collection('classes');
 		const classCollection = client.db('academyDance').collection('class');
 		const paymentCollection = client.db('academyDance').collection('payment');
+		const requestCollection = client
+			.db('academyDance')
+			.collection('requestclasses');
 
 		// JWT related api
 		app.post('/jwt', (req, res) => {
@@ -72,6 +75,18 @@ async function run() {
 		});
 		app.get('/classes', async (req, res) => {
 			const result = await classesCollection.find().toArray();
+			res.send(result);
+		});
+
+		// admin request
+
+		app.get('/requestadmin', async (req, res) => {
+			const result = await requestCollection.find().toArray();
+			res.send(result);
+		});
+		app.post('/requestadmin', async (req, res) => {
+			const body = req.body;
+			const result = await requestCollection.insertOne(body);
 			res.send(result);
 		});
 
