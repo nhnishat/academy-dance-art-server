@@ -62,7 +62,7 @@ async function run() {
 
 		// JWT related api
 		app.post('/jwt', (req, res) => {
-			const user = req.newItem;
+			const user = req.body;
 			const token = jwt.sign(user, process.env.ACCESS_SECRET_TOKEN, {
 				expiresIn: '5hr',
 			});
@@ -78,7 +78,7 @@ async function run() {
 			res.send(result);
 		});
 		app.post('/classes/:id', async (req, res) => {
-			const newItem = req.newItem;
+			const newItem = req.body;
 			const id = req.params.id;
 			const result = await classesCollection.insertOne(newItem);
 			const query = { _id: new ObjectId(id) };
@@ -93,7 +93,7 @@ async function run() {
 			res.send(result);
 		});
 		app.post('/requestadmin', async (req, res) => {
-			const newItem = req.newItem;
+			const newItem = req.body;
 			const result = await requestCollection.insertOne(newItem);
 			res.send(result);
 		});
@@ -130,17 +130,17 @@ async function run() {
 		});
 
 		// admin related api
-		// const verifyAdmin = async (req, res, next) => {
-		// 	const email = req.decoded.email;
-		// 	const query = { email: email };
-		// 	const user = await usersCollection.findOne(query);
-		// 	if (user?.role !== 'admin') {
-		// 		return res
-		// 			.status(403)
-		// 			.send({ error: true, message: 'forbidden message' });
-		// 	}
-		// 	next();
-		// };
+		const verifyAdmin = async (req, res, next) => {
+			const email = req.decoded.email;
+			const query = { email: email };
+			const user = await usersCollection.findOne(query);
+			if (user?.role !== 'admin') {
+				return res
+					.status(403)
+					.send({ error: true, message: 'forbidden message' });
+			}
+			next();
+		};
 
 		// // instructor related api
 		// const verifyInstructor = async (req, res, next) => {
@@ -162,7 +162,7 @@ async function run() {
 		});
 
 		app.post('/users', async (req, res) => {
-			const users = req.newItem;
+			const users = req.body;
 
 			const query = { email: users.email };
 			const existingUser = await usersCollection.findOne(query);
@@ -177,7 +177,7 @@ async function run() {
 		});
 		// user admin related api
 
-		app.get('/users/admin/:email', verifyJWT, async (req, res) => {
+		app.get('/users/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
 			const email = req.params.email;
 			if (req.decoded.email !== email) {
 				res.send({ admin: false });
@@ -231,7 +231,7 @@ async function run() {
 		});
 
 		app.post('/class', async (req, res) => {
-			const newItem = req.newItem;
+			const newItem = req.body;
 			const result = await classCollection.insertOne(newItem);
 			res.send(result);
 		});
@@ -242,7 +242,7 @@ async function run() {
 
 		// create payment intent
 		app.post('/create-payment-intent', verifyJWT, async (req, res) => {
-			const { price } = req.newItem;
+			const { price } = req.body;
 			const amount = parseInt(price * 100);
 			const paymentIntent = await stripe.paymentIntents.create({
 				amount: amount,
@@ -257,13 +257,13 @@ async function run() {
 
 		// payment related api
 		app.get('/payments', async (req, res) => {
-			const newItem = req.newItem;
+			const newItem = req.body;
 			const result = await paymentCollection.find(newItem).toArray();
 			res.send(result);
 		});
 
 		app.post('/payments/:id', verifyJWT, async (req, res) => {
-			const payment = req.newItem;
+			const payment = req.body;
 			const id = req.params.id;
 
 			const insertResult = await paymentCollection.insertOne(payment);
