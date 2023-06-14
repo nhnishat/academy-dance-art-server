@@ -99,7 +99,7 @@ async function run() {
 		});
 		app.patch('/requestadmin/:id', verifyJWT, async (req, res) => {
 			const newItem = req.body;
-			// console.log(newItem);
+
 			const id = req.params.id;
 			const filter = { _id: new ObjectId(id) };
 			const options = { upsert: true };
@@ -163,7 +163,7 @@ async function run() {
 
 		app.post('/users', async (req, res) => {
 			const users = req.newItem;
-			console.log(users);
+
 			const query = { email: users.email };
 			const existingUser = await usersCollection.findOne(query);
 
@@ -265,7 +265,7 @@ async function run() {
 		app.post('/payments/:id', verifyJWT, async (req, res) => {
 			const payment = req.newItem;
 			const id = req.params.id;
-			console.log(id);
+
 			const insertResult = await paymentCollection.insertOne(payment);
 
 			const query = {
