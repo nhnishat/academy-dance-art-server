@@ -248,6 +248,12 @@ async function run() {
 		});
 
 		// payment related api
+		app.get('/payments', async (req, res) => {
+			const body = req.body;
+			const result = await paymentCollection.find(body).toArray();
+			res.send(result);
+		});
+
 		app.post('/payments/:id', verifyJWT, async (req, res) => {
 			const payment = req.body;
 			const id = req.params.id;
@@ -260,6 +266,13 @@ async function run() {
 			const deleteResult = await classCollection.deleteOne(query);
 
 			res.send({ insertResult, deleteResult });
+		});
+
+		app.delete('/payments/:id', async (req, res) => {
+			const id = req.params.id;
+			const query = { _id: new ObjectId(id) };
+			const result = await paymentCollection.deleteOne(query);
+			res.send(result);
 		});
 
 		await client.db('admin').command({ ping: 1 });
