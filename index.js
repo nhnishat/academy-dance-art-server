@@ -47,7 +47,7 @@ const client = new MongoClient(uri, {
 async function run() {
 	try {
 		// Connect the client to the server	(optional starting in v4.7)
-		await client.connect();
+		// await client.connect();
 		// Send a ping to confirm a successful connection
 		const usersCollection = client.db('academyDance').collection('users');
 		const instructorsCollection = client
@@ -156,15 +156,15 @@ async function run() {
 		// };
 
 		// user related api
-		app.get('/users', async (req, res) => {
+		app.get('/users', verifyJWT, async (req, res) => {
 			const result = await usersCollection.find().toArray();
 			res.send(result);
 		});
 
-		app.post('/users', async (req, res) => {
-			const users = req.body;
+		app.post('/users', verifyJWT, async (req, res) => {
+			const user = req.body;
 
-			const query = { email: users.email };
+			const query = { email: user?.email };
 			const existingUser = await usersCollection.findOne(query);
 
 			// console.log('existingUser user', existingUser);
@@ -177,7 +177,7 @@ async function run() {
 		});
 		// user admin related api
 
-		app.get('/users/admin/:email', verifyJWT, verifyAdmin, async (req, res) => {
+		app.get('/users/admin/:email', verifyJWT, async (req, res) => {
 			const email = req.params.email;
 			if (req.decoded.email !== email) {
 				res.send({ admin: false });
@@ -241,7 +241,7 @@ async function run() {
 		});
 
 		// create payment intent
-		app.post('/create-payment-intent', verifyJWT, async (req, res) => {
+		app.post('/create-payment-intent', async (req, res) => {
 			const { price } = req.body;
 			const amount = parseInt(price * 100);
 			const paymentIntent = await stripe.paymentIntents.create({
@@ -262,7 +262,7 @@ async function run() {
 			res.send(result);
 		});
 
-		app.post('/payments/:id', verifyJWT, async (req, res) => {
+		app.post('/payments/:id', async (req, res) => {
 			const payment = req.body;
 			const id = req.params.id;
 
@@ -283,7 +283,7 @@ async function run() {
 			res.send(result);
 		});
 
-		await client.db('admin').command({ ping: 1 });
+		// await client.db('admin').command({ ping: 1 });
 		console.log(
 			'Pinged your deployment. You successfully connected to MongoDB!'
 		);
