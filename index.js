@@ -62,7 +62,7 @@ async function run() {
 
 		// JWT related api
 		app.post('/jwt', (req, res) => {
-			const user = req.body;
+			const user = req.newItem;
 			const token = jwt.sign(user, process.env.ACCESS_SECRET_TOKEN, {
 				expiresIn: '5hr',
 			});
@@ -78,9 +78,9 @@ async function run() {
 			res.send(result);
 		});
 		app.post('/classes/:id', async (req, res) => {
-			const body = req.body;
+			const newItem = req.newItem;
 			const id = req.params.id;
-			const result = await classesCollection.insertOne(body);
+			const result = await classesCollection.insertOne(newItem);
 			const query = { _id: new ObjectId(id) };
 			const resultD = await requestCollection.deleteOne(query);
 			res.send({ result, resultD });
@@ -93,27 +93,35 @@ async function run() {
 			res.send(result);
 		});
 		app.post('/requestadmin', async (req, res) => {
-			const body = req.body;
-			const result = await requestCollection.insertOne(body);
+			const newItem = req.newItem;
+			const result = await requestCollection.insertOne(newItem);
 			res.send(result);
 		});
-		app.patch('/requestadmin/:id', async (req, res) => {
-			const body = req.body;
+		app.patch('/requestadmin/:id', verifyJWT, async (req, res) => {
+			const newItem = req.body;
+			// console.log(newItem);
 			const id = req.params.id;
-			const query = { _id: new ObjectId(id) };
+			const filter = { _id: new ObjectId(id) };
+			const options = { upsert: true };
 			const updatedDoc = {
 				$set: {
-					name: body.name,
-					image: body.imgURL,
-					price: body.price,
-					seat: body.eat,
-					email: body.user?.email,
-					instructor: body.user?.displayName,
+					name: newItem.name,
+					image: newItem.image,
+					price: newItem.price,
+					seat: newItem.seat,
+					email: newItem.email,
+					instructor: newItem.instructor,
 				},
 			};
-			const result = await requestCollection.updateOne(query, updatedDoc);
+			console.log(updatedDoc);
+			const result = await requestCollection.updateOne(
+				filter,
+				updatedDoc,
+				options
+			);
 			res.send(result);
 		});
+
 		app.delete('/requestadmin/:id', async (req, res) => {
 			const id = req.params.id;
 			const query = { _id: new ObjectId(id) };
@@ -154,7 +162,7 @@ async function run() {
 		});
 
 		app.post('/users', async (req, res) => {
-			const users = req.body;
+			const users = req.newItem;
 			console.log(users);
 			const query = { email: users.email };
 			const existingUser = await usersCollection.findOne(query);
@@ -223,8 +231,8 @@ async function run() {
 		});
 
 		app.post('/class', async (req, res) => {
-			const body = req.body;
-			const result = await classCollection.insertOne(body);
+			const newItem = req.newItem;
+			const result = await classCollection.insertOne(newItem);
 			res.send(result);
 		});
 		app.delete('/class/:id', async (req, res) => {
@@ -234,7 +242,7 @@ async function run() {
 
 		// create payment intent
 		app.post('/create-payment-intent', verifyJWT, async (req, res) => {
-			const { price } = req.body;
+			const { price } = req.newItem;
 			const amount = parseInt(price * 100);
 			const paymentIntent = await stripe.paymentIntents.create({
 				amount: amount,
@@ -249,13 +257,13 @@ async function run() {
 
 		// payment related api
 		app.get('/payments', async (req, res) => {
-			const body = req.body;
-			const result = await paymentCollection.find(body).toArray();
+			const newItem = req.newItem;
+			const result = await paymentCollection.find(newItem).toArray();
 			res.send(result);
 		});
 
 		app.post('/payments/:id', verifyJWT, async (req, res) => {
-			const payment = req.body;
+			const payment = req.newItem;
 			const id = req.params.id;
 			console.log(id);
 			const insertResult = await paymentCollection.insertOne(payment);
